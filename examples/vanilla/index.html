@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>passkey-fallback-flow-kit — vanilla demo</title>
+    <!--
+      Self-contained demo. No CDN, no build step.
+      It imports the library straight from ../../src via a relative module path
+      and the optional theme from ../../src/styles.css.
+
+      IMPORTANT: `getRequestOptions` below is a MOCK. It returns canned options
+      and never talks to a real server, so the UI states render without a
+      backend. In production, fetch real options from your server and verify the
+      resulting assertion server-side.
+    -->
+    <link rel="stylesheet" href="../../src/styles.css" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        max-width: 34rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: var(--pfk-color-text);
+        background: var(--pfk-color-surface);
+      }
+      h1 { font-size: 1.4rem; }
+      .card {
+        border: 1px solid var(--pfk-color-border);
+        border-radius: var(--pfk-radius);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        background: var(--pfk-color-surface-alt);
+      }
+      label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+      input[type="text"] {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--pfk-color-border);
+        border-radius: var(--pfk-radius);
+        font: inherit;
+        margin-bottom: 0.75rem;
+      }
+      .mock-banner {
+        font-size: 0.8rem;
+        color: var(--pfk-color-warn);
+        border: 1px dashed var(--pfk-color-warn);
+        border-radius: var(--pfk-radius);
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      .caps code { font-size: 0.85rem; }
+      #fallback-panel[hidden] { display: none; }
+      #fallback-panel {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--pfk-color-border);
+      }
+      .row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>passkey-fallback-flow-kit — vanilla demo</h1>
+
+    <p class="mock-banner">
+      Demo mode: <code>getRequestOptions</code> is a mock returning canned data.
+      No real WebAuthn ceremony completes here unless your browser has a passkey
+      registered for this origin; the point is to show the UI states and events.
+    </p>
+
+    <section class="card">
+      <h2>Capabilities</h2>
+      <p class="caps" id="caps">Checking…</p>
+    </section>
+
+    <section class="card">
+      <label for="username">Email or username</label>
+      <!--
+        The `webauthn` token opts the field into passkey autofill (conditional
+        mediation). Combine it with the field's normal autocomplete token.
+      -->
+      <input
+        id="username"
+        type="text"
+        autocomplete="username webauthn"
+        placeholder="you@example.com"
+      />
+
+      <div class="row">
+        <button id="signin" class="pfk-button" type="button">
+          Sign in with a passkey
+        </button>
+      </div>
+
+      <p
+        id="status"
+        class="pfk-status"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <!-- Cross-device affordance is mounted here by JS. -->
+      <div id="cross-device-mount" style="margin-top: 1rem"></div>
+
+      <!-- Fallback UI (password/OTP) is revealed by the flow. -->
+      <div id="fallback-panel" hidden>
+        <label for="password">Password (fallback)</label>
+        <input id="password" type="text" autocomplete="current-password" />
+        <button id="password-submit" class="pfk-button pfk-button--secondary" type="button">
+          Continue with password
+        </button>
+      </div>
+    </section>
+
+    <script type="module">
+      import {
+        getPasskeyCapabilities,
+        mountConditionalUI,
+        createPasskeyFlow,
+        createCrossDevicePrompt,
+      } from '../../src/index.js';
+
+      const $ = (id) => document.getElementById(id);
+      const statusEl = $('status');
+      const setStatus = (msg, kind) => {
+        statusEl.textContent = msg;
+        statusEl.className =
+          'pfk-status' + (kind ? ` pfk-status--${kind}` : '');
+      };
+
+      // --- MOCK backend -----------------------------------------------------
+      // Returns canned assertion options. Replace with a real fetch() to your
+      // server in production, and verify the assertion server-side.
+      async function getRequestOptions() {
+        const challenge = new Uint8Array(32);
+        if (globalThis.crypto?.getRandomValues) {
+          crypto.getRandomValues(challenge);
+        }
+        return {
+          publicKey: {
+            challenge,
+            timeout: 60000,
+            userVerification: 'preferred',
+            rpId: location.hostname,
+            allowCredentials: [], // discoverable credentials
+          },
+        };
+      }
+
+      // 1. Show capabilities -------------------------------------------------
+      getPasskeyCapabilities().then((caps) => {
+        $('caps').innerHTML = Object.entries(caps)
+          .map(([k, v]) => `<code>${k}</code>: <strong>${v}</strong>`)
+          .join(' &nbsp;·&nbsp; ');
+      });
+
+      // 2. Conditional UI (autofill) ----------------------------------------
+      // Safe to call once on page load; no-ops when unavailable.
+      mountConditionalUI({
+        getRequestOptions,
+        onSuccess: (credential) => {
+          setStatus('Signed in via autofill passkey.', 'success');
+          console.log('conditional credential', credential);
+        },
+        onError: (err, info) =>
+          console.warn('conditional UI error', info.kind, err),
+        onUnavailable: () =>
+          console.info('Conditional mediation not available in this browser.'),
+      });
+
+      // 3. Fallback flow -----------------------------------------------------
+      const flow = createPasskeyFlow({
+        authenticate: async () => {
+          const options = await getRequestOptions();
+          // Real ceremony; may be cancelled / no-credential in demo mode.
+          return navigator.credentials.get(options);
+        },
+        fallback: ({ reason }) => {
+          $('fallback-panel').hidden = false;
+          $('password').focus();
+          console.log('fell back because:', reason);
+        },
+      });
+
+      flow.on('change', (e) => {
+        if (e.state === 'authenticating') setStatus(e.message);
+        if (e.state === 'success') setStatus(e.message, 'success');
+        if (e.state === 'fallback') setStatus(e.message, 'fallback');
+        if (e.state === 'error') setStatus(e.message, 'error');
+      });
+
+      $('signin').addEventListener('click', () => {
+        flow.reset();
+        $('fallback-panel').hidden = true;
+        flow.start();
+      });
+
+      $('password-submit').addEventListener('click', () => {
+        setStatus('Password path — hand off to your normal login here.', 'success');
+      });
+
+      // 4. Cross-device hand-off --------------------------------------------
+      const crossDevice = createCrossDevicePrompt({
+        onActivate: async () => {
+          // Triggers the standard ceremony; the platform shows the QR itself.
+          const options = await getRequestOptions();
+          try {
+            await navigator.credentials.get(options);
+            setStatus('Signed in from another device.', 'success');
+          } catch (err) {
+            setStatus('Cross-device sign-in did not complete.', 'fallback');
+            console.warn(err);
+          }
+        },
+      });
+      $('cross-device-mount').appendChild(crossDevice.element);
+    </script>
+  </body>
+</html>

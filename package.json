@@ -1,0 +1,52 @@
+{
+  "name": "passkey-fallback-flow-kit",
+  "version": "0.1.0",
+  "description": "Framework-agnostic, zero-dependency UI building blocks for the tricky passkey UX edge cases: feature detection, conditional-mediation autofill, the \"no passkey found\" fallback flow, and a cross-device hand-off affordance. Accessible by default.",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./styles.css": "./src/styles.css",
+    "./feature-detect": "./src/feature-detect.js",
+    "./conditional-ui": "./src/conditional-ui.js",
+    "./fallback-flow": "./src/fallback-flow.js",
+    "./cross-device": "./src/cross-device.js"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  },
+  "keywords": [
+    "webauthn",
+    "passkeys",
+    "conditional-ui",
+    "autofill",
+    "mediation",
+    "fallback",
+    "ux",
+    "feature-detection",
+    "progressive-enhancement",
+    "accessible"
+  ],
+  "homepage": "https://www.passkeywebauthn.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/passkeywebauthn/passkey-fallback-flow-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/passkeywebauthn/passkey-fallback-flow-kit/issues"
+  },
+  "author": "passkeywebauthn",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

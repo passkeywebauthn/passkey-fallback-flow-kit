@@ -1,0 +1,198 @@
+/*
+ * passkey-fallback-flow-kit — optional theme.
+ *
+ * OPT-IN and OVERRIDABLE. The components work with no CSS at all; this file is
+ * a light "fresh greens / soft neutrals" theme. Everything is driven by CSS
+ * custom properties under `--pfk-*`, so you can retheme without editing this
+ * file — just override the variables on `:root` (or any ancestor).
+ *
+ * Import it however your setup allows, e.g.:
+ *   import 'passkey-fallback-flow-kit/src/styles.css';
+ *   <link rel="stylesheet" href="node_modules/passkey-fallback-flow-kit/src/styles.css">
+ */
+
+:root {
+  /* Palette — fresh greens / soft neutrals */
+  --pfk-green-600: #2f855a;
+  --pfk-green-500: #38a169;
+  --pfk-green-400: #48bb78;
+  --pfk-green-100: #e6f4ec;
+  --pfk-neutral-900: #1f2933;
+  --pfk-neutral-700: #3e4c59;
+  --pfk-neutral-500: #7b8794;
+  --pfk-neutral-200: #e4e7eb;
+  --pfk-neutral-100: #f5f7fa;
+  --pfk-white: #ffffff;
+  --pfk-amber-600: #b7791f;
+  --pfk-red-600: #c53030;
+
+  /* Semantic tokens */
+  --pfk-color-accent: var(--pfk-green-600);
+  --pfk-color-accent-hover: var(--pfk-green-500);
+  --pfk-color-accent-soft: var(--pfk-green-100);
+  --pfk-color-text: var(--pfk-neutral-900);
+  --pfk-color-muted: var(--pfk-neutral-500);
+  --pfk-color-surface: var(--pfk-white);
+  --pfk-color-surface-alt: var(--pfk-neutral-100);
+  --pfk-color-border: var(--pfk-neutral-200);
+  --pfk-color-warn: var(--pfk-amber-600);
+  --pfk-color-danger: var(--pfk-red-600);
+  --pfk-color-on-accent: var(--pfk-white);
+
+  /* Shape & rhythm */
+  --pfk-radius: 10px;
+  --pfk-gap: 0.75rem;
+  --pfk-pad-y: 0.65rem;
+  --pfk-pad-x: 1rem;
+  --pfk-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --pfk-focus-ring: 0 0 0 3px rgba(56, 161, 105, 0.4);
+  --pfk-transition: 140ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pfk-color-accent: var(--pfk-green-400);
+    --pfk-color-accent-hover: var(--pfk-green-500);
+    --pfk-color-accent-soft: #14301f;
+    --pfk-color-text: #e8ecef;
+    --pfk-color-muted: #9aa5b1;
+    --pfk-color-surface: #1a2027;
+    --pfk-color-surface-alt: #222b33;
+    --pfk-color-border: #323d47;
+    --pfk-color-on-accent: #0c1a12;
+  }
+}
+
+.pfk,
+.pfk * {
+  box-sizing: border-box;
+}
+
+.pfk {
+  font-family: var(--pfk-font);
+  color: var(--pfk-color-text);
+  line-height: 1.5;
+}
+
+/* Buttons ---------------------------------------------------------------- */
+.pfk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--pfk-pad-y) var(--pfk-pad-x);
+  font: inherit;
+  font-weight: 600;
+  color: var(--pfk-color-on-accent);
+  background: var(--pfk-color-accent);
+  border: 1px solid transparent;
+  border-radius: var(--pfk-radius);
+  cursor: pointer;
+  transition: background var(--pfk-transition), box-shadow var(--pfk-transition),
+    transform var(--pfk-transition);
+}
+
+.pfk-button:hover:not(:disabled) {
+  background: var(--pfk-color-accent-hover);
+}
+
+.pfk-button:focus-visible {
+  outline: none;
+  box-shadow: var(--pfk-focus-ring);
+}
+
+.pfk-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pfk-button:disabled,
+.pfk-button[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.pfk-button--secondary {
+  color: var(--pfk-color-accent);
+  background: var(--pfk-color-surface);
+  border-color: var(--pfk-color-border);
+}
+
+.pfk-button--secondary:hover:not(:disabled) {
+  background: var(--pfk-color-accent-soft);
+}
+
+/* Cross-device prompt ---------------------------------------------------- */
+.pfk-cross-device {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pfk-gap);
+  padding: 1rem;
+  background: var(--pfk-color-surface-alt);
+  border: 1px solid var(--pfk-color-border);
+  border-radius: var(--pfk-radius);
+  max-width: 28rem;
+}
+
+.pfk-cross-device__icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.pfk-cross-device__hint {
+  margin: 0;
+  color: var(--pfk-color-muted);
+  font-size: 0.9rem;
+}
+
+.pfk-cross-device__status:empty {
+  display: none;
+}
+
+.pfk-cross-device__status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--pfk-color-accent);
+}
+
+/* Status / fallback text ------------------------------------------------- */
+.pfk-status {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.pfk-status--error {
+  color: var(--pfk-color-danger);
+}
+
+.pfk-status--fallback {
+  color: var(--pfk-color-warn);
+}
+
+.pfk-status--success {
+  color: var(--pfk-color-accent);
+}
+
+/* Visually-hidden utility for offscreen labels/live regions. */
+.pfk-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .pfk-button,
+  .pfk * {
+    transition: none !important;
+    animation: none !important;
+  }
+  .pfk-button:active:not(:disabled) {
+    transform: none;
+  }
+}
